@@ -74,7 +74,7 @@ const App: React.FC = () => {
       // Remove extra spaces and newlines
       const markdownContent = `# Question\n\n${question}\n\n# Answer\n\n${answerContent}`;
       setAnswer(markdownContent);
-    
+
       // Save the question and answer to the local database
       const timestamp = new Date();
       await saveToDB(question, answerContent);
@@ -109,20 +109,21 @@ const App: React.FC = () => {
             <Text fontSize="xl">History</Text>
             {history.map((item, index) => (
               <Box key={index} p={2} borderWidth={1} borderRadius="md" mb={2}>
-                <Text fontWeight="bold" fontSize={24}>
-                  Question:
+                <Text fontSize="lg" color="gray.500">
+                  {new Date(item.timestamp).toLocaleString()}
                 </Text>
+                <div>
+                  <Text fontWeight="bold" fontSize={24}>
+                    Question:
+                  </Text>
+                </div>
                 <Text>{item.question}</Text>
-                <br />
                 <Text fontWeight="bold" fontSize={24}>
                   Answer:
                 </Text>
                 <Box as="pre" whiteSpace="pre-wrap" wordBreak="break-word">
                   <ReactMarkdown>{item.answer}</ReactMarkdown>
                 </Box>
-                <Text fontSize="sm" color="gray.500">
-                  {new Date(item.timestamp).toLocaleString()}
-                </Text>
               </Box>
             ))}
           </Box>
