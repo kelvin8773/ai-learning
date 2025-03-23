@@ -37,12 +37,14 @@ const App: React.FC = () => {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [history, setHistory] = useState<
-    { question: string; answer: string }[]
+    { question: string; answer: string; timestamp: Date }[]
   >([]);
 
   useEffect(() => {
     const fetchHistory = async () => {
       const savedHistory = await getAllFromDB();
+      // Sort history in descending order by timestamp
+      savedHistory.sort((a, b) => b.timestamp - a.timestamp);
       setHistory(savedHistory);
     };
     fetchHistory();
@@ -68,15 +70,17 @@ const App: React.FC = () => {
         }
       );
 
-      const answerContent = response.data.choices[0].message.content;
+      const answerContent = response.data.choices[0].message.content.trim();
+      // Remove extra spaces and newlines
       const markdownContent = `# Question\n\n${question}\n\n# Answer\n\n${answerContent}`;
       setAnswer(markdownContent);
-
+    
       // Save the question and answer to the local database
+      const timestamp = new Date();
       await saveToDB(question, answerContent);
 
       // Update the history state
-      setHistory([...history, { question, answer: answerContent }]);
+      setHistory([{ question, answer: answerContent, timestamp }, ...history]);
     } catch (error) {
       console.error("Error:", error);
       if (axios.isAxiosError(error)) {
@@ -110,16 +114,15 @@ const App: React.FC = () => {
                 </Text>
                 <Text>{item.question}</Text>
                 <br />
-
                 <Text fontWeight="bold" fontSize={24}>
                   Answer:
                 </Text>
-
                 <Box as="pre" whiteSpace="pre-wrap" wordBreak="break-word">
-                  <ReactMarkdown >{item.answer.trim()}</ReactMarkdown>
+                  <ReactMarkdown>{item.answer}</ReactMarkdown>
                 </Box>
-                {/* <Text fontWeight="bold">Answer:</Text>
-                <Text>{item.answer}</Text> */}
+                <Text fontSize="sm" color="gray.500">
+                  {new Date(item.timestamp).toLocaleString()}
+                </Text>
               </Box>
             ))}
           </Box>
