@@ -1,4 +1,6 @@
-// filepath: d:\DevOp\Projects\ai-learning\ask-deepseek.js
+// skeleton code for a CLI that asks DeepSeek questions and prints the response
+// Usage: node ask-deepseek-cli.js
+
 import OpenAI from "openai";
 import readlineSync from "readline-sync";
 import dotenv from "dotenv";
