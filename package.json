@@ -18,6 +18,7 @@
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
     "readline-sync": "^1.4.10",
+    "remark-gfm": "^3.0.1",
     "typescript": "^5.8.2",
     "vite": "^6.2.2"
   },
@@ -29,11 +30,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "postinstall": "npx tailwindcss -i ./src/index.css -o ./src/tailwind-output.css --minify"
   },
   "author": "Kelvin Liang",
   "license": "ISC",
   "devDependencies": {
-    "@types/file-saver": "^2.0.7"
+    "@types/file-saver": "^2.0.7",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.2.4"
   }
 }
