@@ -8,12 +8,19 @@ import {
   Button,
   Text,
   Stack,
+  Spinner,
+  Center,
 } from "@chakra-ui/react";
 import axios from "axios";
-import { saveAs } from "file-saver";
 import ReactMarkdown from "react-markdown";
 import { openDB } from "idb";
 
+/**
+ * Initializes the IndexedDB database for storing question and answer pairs.
+ * If the database doesn't exist, it will be created with a single object
+ * store named "qa" which has an auto-incrementing key named "id".
+ * @returns {Promise<IDBDatabase>} The initialized database.
+ */
 const initDB = async () => {
   const db = await openDB("DeepSeekDB", 1, {
     upgrade(db) {
@@ -36,6 +43,7 @@ const getAllFromDB = async () => {
 const App: React.FC = () => {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<
     { question: string; answer: string; timestamp: Date }[]
   >([]);
@@ -55,8 +63,8 @@ const App: React.FC = () => {
       setAnswer("Goodbye!");
       return;
     }
-
-    try {
+  setLoading(true);
+  try {
       const response = await axios.post(
         "https://api.deepseek.com/v1/chat/completions",
         {
@@ -71,7 +79,6 @@ const App: React.FC = () => {
       );
 
       const answerContent = response.data.choices[0].message.content.trim();
-      // Remove extra spaces and newlines
       const markdownContent = `# Question\n\n${question}\n\n# Answer\n\n${answerContent}`;
       setAnswer(markdownContent);
 
@@ -88,6 +95,8 @@ const App: React.FC = () => {
       } else {
         setAnswer("An unexpected error occurred");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,9 +110,17 @@ const App: React.FC = () => {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
           />
-          <Button onClick={askQuestion}>Submit</Button>
-          <Box as="pre" whiteSpace="pre-wrap" wordBreak="break-word">
-            <ReactMarkdown>{answer}</ReactMarkdown>
+          <Button onClick={askQuestion} isLoading={loading} loadingText="Thinking...">
+            Submit
+          </Button>
+          <Box as="pre" whiteSpace="pre-wrap" wordBreak="break-word" minHeight="120px">
+            {loading ? (
+              <Center py={8}>
+                <Spinner size="xl" />
+              </Center>
+            ) : (
+              <ReactMarkdown>{answer}</ReactMarkdown>
+            )}
           </Box>
           <Box>
             <Text fontSize="xl">History</Text>
