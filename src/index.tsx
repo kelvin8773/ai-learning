@@ -6,6 +6,7 @@ import {
   ChakraProvider,
   Box,
   Input,
+  Textarea, // Add Textarea import
   Button,
   Text,
   Grid,
@@ -149,6 +150,9 @@ const App: React.FC = () => {
     tbody: ({ node, ...props }: any) => <Box as="tbody" {...props} />,
   };
 
+  // Add animation state for the button
+  const [isButtonActive, setIsButtonActive] = useState(false);
+
   useEffect(() => {
     const fetchHistory = async () => {
       const savedHistory = await getAllFromDB();
@@ -165,10 +169,11 @@ const App: React.FC = () => {
   }, []);
 
   const askQuestion = async () => {
-    if (question.toLowerCase() === "exit") {
+   if (question.toLowerCase() === "exit") {
       setAnswer("Goodbye!");
       return;
     }
+    setIsButtonActive(true); // Activate button animation
     setLoading(true);
     try {
       const response = await axios.post(
@@ -208,6 +213,7 @@ const App: React.FC = () => {
       }
     } finally {
       setLoading(false);
+      setIsButtonActive(false); 
     }
   };
 
@@ -240,35 +246,39 @@ const App: React.FC = () => {
                   }
                 />
               </HStack>
-              <HStack spacing={2} align="center">
-                <Text fontSize="sm" color="gray.500">
-                  Accent
-                </Text>
-                {["blue", "teal", "purple", "orange", "pink"].map((c) => (
-                  <AccentSwatch
-                    key={c}
-                    color={c}
-                    selected={accent === c}
-                    onClick={() => setAccent(c)}
-                  />
-                ))}
-              </HStack>
+            
             </HStack>
           </HStack>
 
           <HStack>
-            <Input
+            <Textarea
               placeholder="Ask a question"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               bg={useColorModeValue("white", "gray.600")}
               borderColor={useColorModeValue("gray.200", "gray.600")}
+              minHeight="120px" // Make it bigger
+              resize="vertical" // Allow vertical resizing
+              py={2}
             />
             <Button
               onClick={askQuestion}
               isLoading={loading}
               loadingText="Thinking..."
               colorScheme={accent}
+              // Add animation classes based on isButtonActive state
+              className={isButtonActive ? "pulse-animation" : ""}
+              sx={{
+                // Add CSS for the pulse animation
+                "&.pulse-animation": {
+                  animation: "pulse 0.5s ease-in-out",
+                },
+                "@keyframes pulse": {
+                  "0%": { transform: "scale(1)" },
+                  "50%": { transform: "scale(1.05)" },
+                  "100%": { transform: "scale(1)" },
+                },
+              }}
             >
               Submit
             </Button>
@@ -358,7 +368,7 @@ const App: React.FC = () => {
           <VStack
             spacing={3}
             align="stretch"
-            maxH={{ base: "40vh", md: "70vh" }}
+            maxH={{ base: "40vh", md: "full" }}
             overflowY="auto"
           >
             {history.length === 0 && (
