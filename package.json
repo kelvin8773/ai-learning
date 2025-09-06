@@ -20,6 +20,8 @@
     "readline-sync": "^1.4.10",
     "remark-gfm": "^3.0.1",
     "typescript": "^5.8.2",
+    "vfile": "^6.0.3",
+    "vfile-message": "^4.0.3",
     "vite": "^6.2.2"
   },
   "type": "module",
