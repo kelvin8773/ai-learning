@@ -1,0 +1,272 @@
+# .bashrc_improved
+# Enhanced version of .bashrc with improvements
+
+eval "$(fnm env 2>/dev/null)" || echo "fnm not found. Consider installing it for Node.js version management."
+
+# History settings
+#!/usr/bin/env bash
+# .bashrc_improved (macOS-friendly)
+# macOS-adapted version of the user's .bashrc with useful aliases and prompt improvements.
+
+eval "$(fnm env 2>/dev/null)" || echo "fnm not found. Consider installing it for Node.js version management."
+
+# History settings
+HISTSIZE=10000
+HISTFILESIZE=20000
+HISTCONTROL=ignoreboth:erasedups
+HISTTIMEFORMAT="%F %T "
+shopt -s histappend
+shopt -s cmdhist      # Save multi-line commands as single entry
+shopt -s lithist      # Maintain literal newlines in history
+shopt -s promptvars   # Allow PS1 to expand variables like ${GIT_PS1_PROMPT}
+
+# Enable case-insensitive tab completion (may require readline/generic support)
+bind "set completion-ignore-case on" 2>/dev/null || true
+
+# Useful aliases
+
+# Navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias .3='cd ../../..'
+alias .4='cd ../../../..'
+alias ll='ls -alF'
+alias la='ls -laG'       # -G enables color on macOS (BSD ls)
+alias l='ls -CF'
+alias ls='ls -G'         # Use BSD ls color flag on macOS
+# Some mac systems use GNU grep from Homebrew; this alias will work if available
+alias grep='grep --color=auto' 2>/dev/null || alias grep='grep'
+alias cd..='cd ..'    # Handle common typo
+alias ~='cd ~'        # Quick home access
+alias proj='cd ~/Projects || cd ~/DevOp/Projects' # Quick access to Projects folder
+
+# Git aliases
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit -m'
+alias gp='git push'
+alias gl='git pull'
+alias gd='git diff'
+alias gb='git branch'
+alias gco='git checkout'
+alias glog='git log --oneline --graph --decorate'
+
+# Development aliases
+alias python='python3'
+alias pip='pip3'
+alias npmls='npm list --depth=0'
+alias npms='npm start'
+alias npmd='npm run dev'
+alias npmb='npm run build'
+alias serve='python3 -m http.server'  # Simple HTTP server
+alias weather='curl wttr.in'          # Quick weather check
+
+# System aliases
+alias mkdir='mkdir -p'
+alias df='df -h'
+alias du='du -h'
+alias free='free -h' 2>/dev/null || true
+alias path='echo -e ${PATH//:/\\n}'
+alias ln='ln -i'
+
+# Quick edit of config files
+alias eb='code ~/.bashrc'
+alias sb='source ~/.bashrc'
+
+# Enhanced commands
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -i'
+
+alias config='git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+alias bkbash='bash ~/backup_cfg.sh'
+
+# Useful functions
+# Create and enter directory
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Extract various archive formats
+extract() {
+    if [ -f "$1" ]; then
+        case "$1" in
+            *.tar.bz2)   tar xjf "$1"     ;;
+            *.tar.gz)    tar xzf "$1"     ;;
+            *.tar.xz)    tar xJf "$1"     ;;  # xz support
+            *.bz2)       bunzip2 "$1"     ;;
+            *.rar)       unrar e "$1" 2>/dev/null || echo "Install unrar to extract .rar" ;;
+            *.gz)        gunzip "$1"      ;;
+            *.tar)       tar xf "$1"      ;;
+            *.tbz2)      tar xjf "$1"     ;;
+            *.tgz)       tar xzf "$1"     ;;
+            *.zip)       unzip "$1"       ;;
+            *.Z)         uncompress "$1"  ;;
+            *.7z)        7z x "$1" 2>/dev/null || echo "Install p7zip to extract .7z" ;;
+            *.xz)        unxz "$1"        ;;
+            *)           echo "'$1' cannot be extracted via extract()" ;;
+        esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
+# Quick backup function
+backup() {
+    if [ -z "$1" ]; then
+        echo "Usage: backup <file>"
+        return 1
+    fi
+    cp "$1" "$1.backup.$(date +%Y%m%d_%H%M%S)"
+    echo "Backup created: $1.backup.$(date +%Y%m%d_%H%M%S)"
+}
+
+# Find files containing specific text
+fstr() {
+    if [ -z "$1" ]; then
+        echo "Usage: fstr <search_term> [file_pattern]"
+        return 1
+    fi
+    local pattern="${2:-*}"
+    grep -rn "$1" . --include="$pattern"
+}
+
+# Setting prompt
+# Load git prompt scripts if available (macOS/Homebrew locations)
+GIT_PROMPT_LOADED=0
+try_source() {
+    [ -f "$1" ] || return 1
+    . "$1"
+    GIT_PROMPT_LOADED=1
+}
+
+# Common locations for git-prompt.sh / git-sh-prompt (include Homebrew paths)
+try_source "/usr/local/git/contrib/completion/git-prompt.sh" || true
+try_source "/usr/local/etc/bash_completion.d/git-prompt.sh" || true
+try_source "/opt/homebrew/etc/bash_completion.d/git-prompt.sh" || true
+try_source "/usr/local/share/git-core/contrib/completion/git-prompt.sh" || true
+try_source "$HOME/.local/share/git-core/git-prompt.sh" || true
+
+# Try to find via git --exec-path
+if [ "$GIT_PROMPT_LOADED" -eq 0 ]; then
+    GIT_EXEC_PATH=$(git --exec-path 2>/dev/null || true)
+    if [ -n "$GIT_EXEC_PATH" ]; then
+        try_source "${GIT_EXEC_PATH%/libexec/git-core}/share/git/completion/git-prompt.sh" || true
+        try_source "${GIT_EXEC_PATH%/lib/git-core}/share/git/completion/git-prompt.sh" || true
+    fi
+fi
+
+# If still not loaded, try common bash-completion paths that may expose __git_ps1
+if [ "$GIT_PROMPT_LOADED" -eq 0 ]; then
+    try_source "/usr/local/etc/bash_completion.d/git" || true
+    try_source "/opt/homebrew/etc/bash_completion.d/git" || true
+fi
+
+# Git prompt configuration
+GIT_PS1_SHOWDIRTYSTATE=1
+GIT_PS1_SHOWSTASHSTATE=1
+GIT_PS1_SHOWUNTRACKEDFILES=1
+GIT_PS1_SHOWUPSTREAM="auto"
+GIT_PS1_SHOWCOLORHINTS=1
+
+# Modern color scheme with fallback
+RESET="\[\033[0m\]"
+if [[ $TERM == *"color"* ]] || [[ $TERM == *"256color"* ]]; then
+    BLACK="\[\033[0;30m\]"
+    RED="\[\033[38;5;203m\]"           # Soft red
+    GREEN="\[\033[38;5;84m\]"          # Bright mint
+    YELLOW="\[\033[38;5;222m\]"        # Soft yellow
+    BLUE="\[\033[38;5;75m\]"           # Sky blue
+    PURPLE="\[\033[38;5;176m\]"        # Soft purple
+    CYAN="\[\033[38;5;80m\]"           # Turquoise
+    WHITE="\[\033[38;5;255m\]"         # Bright white
+    ORANGE="\[\033[38;5;209m\]"        # Soft orange
+    PINK="\[\033[38;5;211m\]"          # Soft pink
+    GRAY="\[\033[38;5;246m\]"          # Medium gray
+else
+    # Fallback to basic colors if 256-color support is not available
+    RED="\[\033[0;31m\]"
+    GREEN="\[\033[0;32m\]"
+    YELLOW="\[\033[0;33m\]"
+    BLUE="\[\033[0;34m\]"
+    PURPLE="\[\033[0;35m\]"
+    CYAN="\[\033[0;36m\]"
+fi
+
+# Window title
+PS1='\[\033]0;${PWD##*/} 🚀 Terminal\007\]'
+
+# Main prompt
+PS1+="${RESET}\n"                                    # New line
+PS1+="${BLUE}┏━━ ${RESET}"                          # Top line start
+PS1+="${GRAY}at ${CYAN}\A${RESET} "                 # Time with label
+PS1+="${GRAY}as ${GREEN}\u${RESET} "                # Username with label
+PS1+="${GRAY}in ${YELLOW}\w${RESET}"                # Directory with label
+
+# Git status (if available) — dynamic update via PROMPT_COMMAND
+if type __git_ps1 &>/dev/null; then
+    # updater: called before each prompt to refresh git info
+    update_git_ps1() {
+        GIT_PS1_PROMPT=$( __git_ps1 ' (%s)' 2>/dev/null || true )
+    }
+    # Preserve existing PROMPT_COMMAND while ensuring our updater runs first
+    if [ -z "${PROMPT_COMMAND:-}" ]; then
+        PROMPT_COMMAND='update_git_ps1'
+    else
+        PROMPT_COMMAND="update_git_ps1; $PROMPT_COMMAND"
+    fi
+    # Insert literal variable reference into PS1 so it expands at prompt time
+    PS1+=" ${GRAY}on${RESET} ${PURPLE}\\
+\${GIT_PS1_PROMPT}${RESET}"
+fi
+
+# Command entry line
+PS1+="\n${BLUE}┗━━${ORANGE} ❯${CYAN}❯${GREEN}❯${RESET} "
+
+# Evaluate all user-specific Bash completion scripts (if any) — macOS locations
+for c in "$HOME"/.bash_completion.d/*.bash /usr/local/etc/bash_completion.d/*.bash /opt/homebrew/etc/bash_completion.d/*.bash 2>/dev/null; do
+    test ! -f "$c" || . "$c"
+done
+
+# --- startup directory ---
+# Set STARTUP_PATH to override the default startup directory.
+if [ -z "${STARTUP_PATH:-}" ]; then
+    if [ -d "$HOME/Projects" ]; then
+        STARTUP_PATH="$HOME/Projects"
+    elif [ -d "$HOME/DevOp/Projects" ]; then
+        STARTUP_PATH="$HOME/DevOp/Projects"
+    else
+        STARTUP_PATH="$HOME"
+    fi
+fi
+
+# Only change directory for interactive shells
+case "$-" in
+    *i*)
+        # Only change directory if not already set by SSH or other means
+        if [ -z "$SSH_CONNECTION" ] && [ -n "$STARTUP_PATH" ] && [ -d "$STARTUP_PATH" ] && [ "$PWD" != "$STARTUP_PATH" ]; then
+            cd "$STARTUP_PATH"
+        fi
+        ;;
+    *)
+        # non-interactive shell: do nothing
+        ;;
+esac
+
+# Helper to set STARTUP_PATH for the current session and show how to persist it
+set_startup() {
+    if [ -z "$1" ]; then
+        echo "Usage: set_startup /path/to/dir"
+        return 1
+    fi
+    if [ ! -d "$1" ]; then
+        echo "Directory does not exist: $1"
+        return 1
+    fi
+    export STARTUP_PATH="$1"
+    echo "STARTUP_PATH set to: $STARTUP_PATH"
+    echo "To persist this for future shells, add the following line to ~/.bashrc or another startup file:"
+    echo "  export STARTUP_PATH=\"$STARTUP_PATH\""
+}
+
+# --- end startup directory block ---
