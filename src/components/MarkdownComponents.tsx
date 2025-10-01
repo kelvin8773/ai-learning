@@ -6,6 +6,8 @@
 import React from 'react';
 import { Box, useColorModeValue } from '@chakra-ui/react';
 
+// Create components with inline useColorModeValue calls
+// This is acceptable for markdown rendering as it's within the render cycle
 export const markdownComponents = {
   table: ({ node, ...props }: any) => (
     <Box overflowX="auto" my={4}>

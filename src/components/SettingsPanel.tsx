@@ -23,7 +23,6 @@ import {
   SliderFilledTrack,
   SliderThumb,
   SliderMark,
-  Divider,
   Box,
   useColorModeValue,
   Accordion,
@@ -35,7 +34,7 @@ import {
   Tooltip,
   IconButton,
 } from '@chakra-ui/react';
-import { ChakraText as ChakraChakraText } from '@chakra-ui/react';
+import { Text as ChakraText } from '@chakra-ui/react';
 import { FiInfo } from 'react-icons/fi';
 import { AccentColor, accentColors } from '../config/theme';
 

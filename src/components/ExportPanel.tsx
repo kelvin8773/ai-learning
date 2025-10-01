@@ -27,10 +27,9 @@ import {
   Checkbox,
   CheckboxGroup,
   Stack,
-  Badge,
   useToast,
 } from '@chakra-ui/react';
-import { ChakraText as ChakraChakraText } from '@chakra-ui/react';
+import { Text as ChakraText } from '@chakra-ui/react';
 import { ChatHistoryItem } from '../utils/database';
 import { exportConversation, exportMultipleConversations, ExportFormat } from '../utils/exportUtils';
 
@@ -54,6 +53,8 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   
   const bg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const infoBg = useColorModeValue('gray.50', 'gray.700');
   const toast = useToast();
 
   const handleExport = async () => {
@@ -162,7 +163,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
                 <option value="markdown">Markdown (.md)</option>
                 <option value="pdf">PDF (.pdf)</option>
                 <option value="json">JSON (.json)</option>
-                <option value="txt">Plain ChakraText (.txt)</option>
+                <option value="txt">Plain Text (.txt)</option>
               </Select>
             </FormControl>
 
@@ -217,7 +218,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
                     maxH="200px"
                     overflowY="auto"
                     border="1px solid"
-                    borderColor={useColorModeValue('gray.200', 'gray.600')}
+                    borderColor={borderColor}
                     borderRadius="md"
                     p={3}
                   >
@@ -246,7 +247,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
             )}
 
             {/* Format-specific Info */}
-            <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="md">
+            <Box p={3} bg={infoBg} borderRadius="md">
               <ChakraText fontSize="sm" color="gray.600">
                 <strong>Format:</strong> {exportFormat.toUpperCase()}
                 {exportFormat === 'pdf' && ' - Best for printing and sharing'}
@@ -267,7 +268,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
               colorScheme="blue"
               onClick={handleExport}
               isLoading={isExporting}
-              loadingChakraText="Exporting..."
+              loadingText="Exporting..."
               isDisabled={isExportDisabled}
             >
               {selectedConversation ? 'Export Conversation' : `Export ${selectedConversations.length} Conversations`}

@@ -38,6 +38,7 @@ export const ChatDisplay: React.FC<ChatDisplayProps> = React.memo(({
 }) => {
   const panelBg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.100', 'gray.600');
+  const codeBg = useColorModeValue('gray.100', 'gray.700');
   const toast = useToast();
 
   const displayQuestion = question || selectedQuestion || 'No question selected';
@@ -173,11 +174,11 @@ export const ChatDisplay: React.FC<ChatDisplayProps> = React.memo(({
                   whiteSpace: 'pre-wrap',
                   overflowX: 'auto',
                   p: 3,
-                  bg: useColorModeValue('gray.100', 'gray.700'),
+                  bg: codeBg,
                   borderRadius: 6,
                 },
                 code: {
-                  bg: useColorModeValue('gray.100', 'gray.700'),
+                  bg: codeBg,
                   px: 1,
                   borderRadius: 4,
                   fontSize: '0.95em',
