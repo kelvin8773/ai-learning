@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosResponse } from 'axios';
-import { API_CONFIG, getApiKey, getApiUrl } from '../config/env';
+import { API_CONFIG, getApiKey } from '../config/env';
 
 export interface DeepSeekMessage {
   role: 'user' | 'assistant' | 'system';
@@ -17,6 +17,12 @@ export interface DeepSeekRequest {
   temperature?: number;
   max_tokens?: number;
   stream?: boolean;
+}
+
+export interface StreamingResponse {
+  onData: (chunk: string) => void;
+  onComplete: () => void;
+  onError: (error: ApiError) => void;
 }
 
 export interface DeepSeekResponse {
@@ -144,6 +150,125 @@ export async function askQuestion(
 
   const response = await sendChatCompletion(request);
   return response.choices[0]?.message?.content?.trim() || '';
+}
+
+/**
+ * Sends a streaming chat completion request to DeepSeek API
+ * @param request The chat completion request with streaming enabled
+ * @param callbacks Callbacks for handling streaming data
+ * @throws ApiError if the request fails
+ */
+export async function sendStreamingChatCompletion(
+  request: DeepSeekRequest,
+  callbacks: StreamingResponse
+): Promise<void> {
+  try {
+    const client = createApiClient();
+    const requestData = {
+      model: request.model || API_CONFIG.DEFAULT_MODEL,
+      messages: request.messages,
+      temperature: request.temperature || 0.7,
+      max_tokens: request.max_tokens || 2000,
+      stream: true,
+    };
+
+    console.log('Sending streaming request to DeepSeek API:', {
+      url: `${API_CONFIG.DEEPSEEK_API_URL}/v1/chat/completions`,
+      model: requestData.model,
+      messageCount: requestData.messages.length,
+      streaming: true,
+    });
+
+    const response = await fetch(`${API_CONFIG.DEEPSEEK_API_URL}/v1/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${getApiKey()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body reader available');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          
+          if (data === '[DONE]') {
+            callbacks.onComplete();
+            return;
+          }
+
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            
+            if (content) {
+              callbacks.onData(content);
+            }
+          } catch (error) {
+            console.warn('Failed to parse streaming data:', error);
+          }
+        }
+      }
+    }
+
+    callbacks.onComplete();
+  } catch (error) {
+    console.error('Streaming API error:', error);
+    
+    const apiError: ApiError = {
+      message: error instanceof Error ? error.message : 'Streaming request failed',
+    };
+    
+    callbacks.onError(apiError);
+  }
+}
+
+/**
+ * Sends a streaming question to DeepSeek with real-time response updates
+ * @param question The user's question
+ * @param callbacks Callbacks for handling streaming data
+ * @param options Optional configuration for the request
+ */
+export async function askQuestionStreaming(
+  question: string,
+  callbacks: StreamingResponse,
+  options: {
+    model?: string;
+    temperature?: number;
+    max_tokens?: number;
+  } = {}
+): Promise<void> {
+  const request: DeepSeekRequest = {
+    messages: [{ role: 'user', content: question }],
+    model: options.model,
+    temperature: options.temperature,
+    max_tokens: options.max_tokens,
+  };
+
+  await sendStreamingChatCompletion(request, callbacks);
 }
 
 /**

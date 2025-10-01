@@ -25,6 +25,7 @@ interface ChatDisplayProps {
   question: string;
   answer: string;
   loading: boolean;
+  streaming?: boolean;
   selectedQuestion?: string;
   markdownComponents?: any;
 }
@@ -33,6 +34,7 @@ export const ChatDisplay: React.FC<ChatDisplayProps> = React.memo(({
   question,
   answer,
   loading,
+  streaming = false,
   selectedQuestion,
   markdownComponents,
 }) => {
@@ -120,7 +122,7 @@ export const ChatDisplay: React.FC<ChatDisplayProps> = React.memo(({
               <HStack spacing={1}>
                 <Spinner size="sm" />
                 <ChakraText fontSize="xs" color="gray.500">
-                  Thinking...
+                  {streaming ? 'Streaming...' : 'Thinking...'}
                 </ChakraText>
               </HStack>
             </HStack>
@@ -137,9 +139,19 @@ export const ChatDisplay: React.FC<ChatDisplayProps> = React.memo(({
         ) : answer ? (
           <Box>
             <HStack justify="space-between" mb={3}>
-              <ChakraText fontSize="sm" color="gray.500">
-                Answer
-              </ChakraText>
+              <HStack spacing={2}>
+                <ChakraText fontSize="sm" color="gray.500">
+                  Answer
+                </ChakraText>
+                {streaming && (
+                  <HStack spacing={1}>
+                    <Spinner size="xs" />
+                    <ChakraText fontSize="xs" color="green.500">
+                      Streaming
+                    </ChakraText>
+                  </HStack>
+                )}
+              </HStack>
               <HStack spacing={2}>
                 <Tooltip label="Copy answer">
                   <IconButton

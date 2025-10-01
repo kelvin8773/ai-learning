@@ -24,9 +24,12 @@ interface ChatInputProps {
   question: string;
   onQuestionChange: (question: string) => void;
   onSubmit: () => void;
+  onSubmitStreaming?: () => void;
   loading: boolean;
+  streaming?: boolean;
   error: string | null;
   onClearError: () => void;
+  onStopStreaming?: () => void;
   accent: string;
 }
 
@@ -34,9 +37,12 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   question,
   onQuestionChange,
   onSubmit,
+  onSubmitStreaming,
   loading,
+  streaming = false,
   error,
   onClearError,
+  onStopStreaming,
   accent,
 }) => {
   const bg = useColorModeValue('white', 'gray.600');
@@ -109,17 +115,42 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
                   />
                 </Tooltip>
               )}
+              {streaming && onStopStreaming && (
+                <Tooltip label="Stop streaming">
+                  <Button
+                    onClick={onStopStreaming}
+                    colorScheme="red"
+                    size="sm"
+                    variant="outline"
+                  >
+                    Stop
+                  </Button>
+                </Tooltip>
+              )}
+              {!streaming && onSubmitStreaming && (
+                <Tooltip label="Send with streaming">
+                  <Button
+                    onClick={onSubmitStreaming}
+                    colorScheme={accent}
+                    size="sm"
+                    variant="outline"
+                    isDisabled={!question.trim()}
+                  >
+                    Stream
+                  </Button>
+                </Tooltip>
+              )}
               <Button
                 onClick={onSubmit}
-                isLoading={loading}
+                isLoading={loading && !streaming}
                 loadingText="..."
                 colorScheme={accent}
                 size="md"
                 minW="80px"
-                isDisabled={!question.trim()}
+                isDisabled={!question.trim() || streaming}
                 rightIcon={<ArrowForwardIcon />}
               >
-                Send
+                {streaming ? 'Streaming...' : 'Send'}
               </Button>
             </HStack>
           </HStack>
@@ -145,18 +176,43 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
               boxShadow: `0 0 0 1px ${accent}.300`,
             }}
           />
-          <Button
-            onClick={onSubmit}
-            isLoading={loading}
-            loadingText="Thinking..."
-            colorScheme={accent}
-            size="lg"
-            minW="120px"
-            isDisabled={!question.trim()}
-            rightIcon={<ArrowForwardIcon />}
-          >
-            Submit
-          </Button>
+          <VStack spacing={2}>
+            {streaming && onStopStreaming && (
+              <Button
+                onClick={onStopStreaming}
+                colorScheme="red"
+                size="sm"
+                variant="outline"
+                w="100%"
+              >
+                Stop Streaming
+              </Button>
+            )}
+            {!streaming && onSubmitStreaming && (
+              <Button
+                onClick={onSubmitStreaming}
+                colorScheme={accent}
+                size="sm"
+                variant="outline"
+                isDisabled={!question.trim()}
+                w="100%"
+              >
+                Stream Mode
+              </Button>
+            )}
+            <Button
+              onClick={onSubmit}
+              isLoading={loading && !streaming}
+              loadingText="Thinking..."
+              colorScheme={accent}
+              size="lg"
+              minW="120px"
+              isDisabled={!question.trim() || streaming}
+              rightIcon={<ArrowForwardIcon />}
+            >
+              {streaming ? 'Streaming...' : 'Submit'}
+            </Button>
+          </VStack>
         </HStack>
       )}
     </>

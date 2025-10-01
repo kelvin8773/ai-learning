@@ -34,6 +34,7 @@ import { ChatHistory } from "./components/ChatHistory";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { markdownComponents } from "./components/MarkdownComponents";
 import { useChat } from "./hooks/useChat";
+import { useStreamingChat } from "./hooks/useStreamingChat";
 import { useKeyboardShortcuts, createAppShortcuts } from "./hooks/useKeyboardShortcuts";
 import { theme, accentColors, AccentColor } from "./config/theme";
 import { validateEnvironment } from "./config/env";
@@ -61,20 +62,23 @@ const App: React.FC = () => {
     onClose: onSettingsClose 
   } = useDisclosure();
   
-  // Use our custom chat hook
+  // Use our custom streaming chat hook
   const {
     question,
     answer,
     loading,
+    streaming,
     history,
     selectedIndex,
     error,
     setQuestion,
     askQuestion,
+    askQuestionStreaming,
     deleteHistoryItem,
     selectHistoryItem,
     clearError,
-  } = useChat();
+    stopStreaming,
+  } = useStreamingChat();
 
   const selectedQuestion = selectedIndex !== null ? history[selectedIndex]?.question : undefined;
 
@@ -164,9 +168,12 @@ const App: React.FC = () => {
             question={question}
             onQuestionChange={setQuestion}
             onSubmit={askQuestion}
+            onSubmitStreaming={askQuestionStreaming}
             loading={loading}
+            streaming={streaming}
             error={error}
             onClearError={clearError}
+            onStopStreaming={stopStreaming}
             accent={accent}
           />
 
@@ -174,6 +181,7 @@ const App: React.FC = () => {
             question={question}
             answer={answer}
             loading={loading}
+            streaming={streaming}
             selectedQuestion={selectedQuestion}
             markdownComponents={markdownComponents}
           />
