@@ -21,7 +21,6 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-  StatArrow,
   Progress,
   Divider,
   Grid,
@@ -171,7 +170,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <VStack spacing={2} align="stretch">
                 <Box p={3} bg={statBg} borderRadius="md">
                   <HStack>
-                    <StatArrow type="increase" />
+                    <Text fontSize="sm">📈</Text>
                     <Text fontSize="sm">
                       Average {analytics.totalQuestions > 0 
                         ? Math.round((analytics.totalTokensUsed / analytics.totalQuestions))
