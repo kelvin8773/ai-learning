@@ -69,6 +69,23 @@ export const theme = extendTheme({
         bg: props.colorMode === 'dark' ? 'gray.900' : 'gray.50',
         color: props.colorMode === 'dark' ? 'white' : 'gray.900',
       },
+      '*': {
+        scrollbarWidth: 'thin',
+        scrollbarColor: props.colorMode === 'dark' ? '#4A5568 #2D3748' : '#CBD5E0 #F7FAFC',
+      },
+      '*::-webkit-scrollbar': {
+        width: '8px',
+      },
+      '*::-webkit-scrollbar-track': {
+        background: props.colorMode === 'dark' ? '#2D3748' : '#F7FAFC',
+      },
+      '*::-webkit-scrollbar-thumb': {
+        background: props.colorMode === 'dark' ? '#4A5568' : '#CBD5E0',
+        borderRadius: '4px',
+      },
+      '*::-webkit-scrollbar-thumb:hover': {
+        background: props.colorMode === 'dark' ? '#718096' : '#A0AEC0',
+      },
     }),
   },
 });
