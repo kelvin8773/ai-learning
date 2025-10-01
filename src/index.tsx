@@ -22,6 +22,7 @@ import {
   useDisclosure,
   Button,
   useBreakpointValue,
+  Tooltip,
 } from "@chakra-ui/react";
 import { Text as ChakraText } from "@chakra-ui/react";
 import { HamburgerIcon, SettingsIcon } from "@chakra-ui/icons";
@@ -32,13 +33,17 @@ import { ChatInput } from "./components/ChatInput";
 import { ChatDisplay } from "./components/ChatDisplay";
 import { ChatHistory } from "./components/ChatHistory";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
+import { DataManagement } from "./components/DataManagement";
 import { markdownComponents } from "./components/MarkdownComponents";
 import { useChat } from "./hooks/useChat";
 import { useStreamingChat } from "./hooks/useStreamingChat";
 import { useKeyboardShortcuts, createAppShortcuts } from "./hooks/useKeyboardShortcuts";
+import { usePreferences } from "./hooks/usePreferences";
 import { theme, accentColors, AccentColor } from "./config/theme";
 import { validateEnvironment } from "./config/env";
 import { testApiConnection } from "./services/deepseekApi";
+import { storageService } from "./services/storageService";
 
 // Validate environment on startup
 try {
@@ -62,6 +67,18 @@ const App: React.FC = () => {
     onClose: onSettingsClose 
   } = useDisclosure();
   
+  const { 
+    isOpen: isAnalyticsOpen, 
+    onOpen: onAnalyticsOpen, 
+    onClose: onAnalyticsClose 
+  } = useDisclosure();
+  
+  const { 
+    isOpen: isDataMgmtOpen, 
+    onOpen: onDataMgmtOpen, 
+    onClose: onDataMgmtClose 
+  } = useDisclosure();
+  
   // Use our custom streaming chat hook
   const {
     question,
@@ -79,6 +96,16 @@ const App: React.FC = () => {
     clearError,
     stopStreaming,
   } = useStreamingChat();
+  
+  // User preferences
+  const { preferences, updatePreference } = usePreferences();
+  
+  // Update analytics on question submit
+  React.useEffect(() => {
+    if (answer && !loading) {
+      storageService.updateAnalytics({ questionsAsked: 1 });
+    }
+  }, [answer, loading]);
 
   const selectedQuestion = selectedIndex !== null ? history[selectedIndex]?.question : undefined;
 
@@ -97,6 +124,22 @@ const App: React.FC = () => {
       clearError();
     }
   );
+
+  // Add analytics and data management shortcuts
+  shortcuts.push({
+    key: 'a',
+    ctrlKey: true,
+    description: 'Open Analytics',
+    action: onAnalyticsOpen,
+  });
+  
+  shortcuts.push({
+    key: 'd',
+    ctrlKey: true,
+    shiftKey: true,
+    description: 'Open Data Management',
+    action: onDataMgmtOpen,
+  });
 
   useKeyboardShortcuts(shortcuts);
 
@@ -125,7 +168,7 @@ const App: React.FC = () => {
                   variant="ghost"
                 />
               )}
-              <Heading size="lg">DeepSeek Chat</Heading>
+              <Heading size="lg">AI Chat</Heading>
             </HStack>
             <HStack spacing={3}>
               <HStack spacing={2} align="center">
@@ -141,6 +184,24 @@ const App: React.FC = () => {
                   }
                 />
               </HStack>
+              <Tooltip label="Analytics (Ctrl+A)">
+                <IconButton
+                  aria-label="analytics"
+                  icon={<Box as="span">📊</Box>}
+                  size="sm"
+                  variant="ghost"
+                  onClick={onAnalyticsOpen}
+                />
+              </Tooltip>
+              <Tooltip label="Data Management (Ctrl+Shift+D)">
+                <IconButton
+                  aria-label="data-management"
+                  icon={<Box as="span">🗂️</Box>}
+                  size="sm"
+                  variant="ghost"
+                  onClick={onDataMgmtOpen}
+                />
+              </Tooltip>
               <Button
                 size="sm"
                 variant="outline"
@@ -154,13 +215,15 @@ const App: React.FC = () => {
               >
                 Test API
               </Button>
-              <IconButton
-                aria-label="settings"
-                icon={<SettingsIcon />}
-                size="sm"
-                variant="ghost"
-                onClick={onSettingsOpen}
-              />
+              <Tooltip label="Settings (Ctrl+,)">
+                <IconButton
+                  aria-label="settings"
+                  icon={<SettingsIcon />}
+                  size="sm"
+                  variant="ghost"
+                  onClick={onSettingsOpen}
+                />
+              </Tooltip>
             </HStack>
           </HStack>
 
@@ -228,6 +291,22 @@ const App: React.FC = () => {
         onClose={onSettingsClose}
         accent={accent}
         onAccentChange={setAccent}
+      />
+
+      {/* Analytics Dashboard */}
+      <AnalyticsDashboard
+        isOpen={isAnalyticsOpen}
+        onClose={onAnalyticsClose}
+        conversationCount={history.length}
+      />
+
+      {/* Data Management */}
+      <DataManagement
+        isOpen={isDataMgmtOpen}
+        onClose={onDataMgmtClose}
+        onDataCleared={() => {
+          // Data will be cleared and page will refresh
+        }}
       />
 
       {/* Toast notifications */}
