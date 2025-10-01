@@ -37,6 +37,7 @@ import { useChat } from "./hooks/useChat";
 import { useKeyboardShortcuts, createAppShortcuts } from "./hooks/useKeyboardShortcuts";
 import { theme, accentColors, AccentColor } from "./config/theme";
 import { validateEnvironment } from "./config/env";
+import { testApiConnection } from "./services/deepseekApi";
 
 // Validate environment on startup
 try {
@@ -69,8 +70,6 @@ const App: React.FC = () => {
     selectedIndex,
     error,
     setQuestion,
-    setAnswer,
-    setSelectedIndex,
     askQuestion,
     deleteHistoryItem,
     selectHistoryItem,
@@ -138,6 +137,19 @@ const App: React.FC = () => {
                   }
                 />
               </HStack>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await testApiConnection();
+                  } catch (error) {
+                    console.error('API test failed:', error);
+                  }
+                }}
+              >
+                Test API
+              </Button>
               <IconButton
                 aria-label="settings"
                 icon={<SettingsIcon />}
@@ -225,9 +237,15 @@ const App: React.FC = () => {
   );
 };
 
-const root = ReactDOM.createRoot(
-  document.getElementById("root") as HTMLElement
-);
+const container = document.getElementById("root") as HTMLElement;
+
+// Check if root already exists (for HMR compatibility)
+let root = (container as any)._reactRoot;
+if (!root) {
+  root = ReactDOM.createRoot(container);
+  (container as any)._reactRoot = root;
+}
+
 root.render(
   <ChakraProvider theme={theme}>
     <ColorModeScript initialColorMode={theme.config.initialColorMode} />
